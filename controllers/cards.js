@@ -22,10 +22,16 @@ const createCard = (req, res) => {
 };
 const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+        res.status(errCodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
       } else {
         res.status(errCodes.internalServerError).send({ message: err.message });
       }
@@ -38,10 +44,16 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+        res.status(errCodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
       } else if (err.name === 'ValidationError') {
         res.status(errCodes.badRequest).send({ message: 'Переданы некорректные данные !' });
       } else {
@@ -56,10 +68,16 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (card === null) {
+        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(errCodes.notFound).send({ message: 'Карточка не найдена !' });
+        res.status(errCodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
       } else if (err.name === 'ValidationError') {
         res.status(errCodes.badRequest).send({ message: 'Переданы некорректные данные !' });
       } else {
