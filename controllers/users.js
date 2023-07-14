@@ -1,26 +1,26 @@
 const User = require('../models/user');
-const { errCodes } = require('../utils/errCodes');
+const { responseСodes } = require('../utils/responseСodes');
 
 const getUsers = (req, res) => {
   User.find()
     .then((users) => res.send(users))
-    .catch((err) => res.status(errCodes.internalServerError).send({ message: err.message }));
+    .catch((err) => res.status(responseСodes.internalServerError).send({ message: err.message }));
 };
 
 const getUser = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (user === null) {
-        res.status(errCodes.notFound).send({ message: 'Пользователь не найден !' });
+        res.status(responseСodes.notFound).send({ message: 'Пользователь не найден !' });
       } else {
         res.send(user);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(errCodes.badRequest).send({ message: 'Передан некорретный Id пользователя !' });
+        res.status(responseСodes.badRequest).send({ message: 'Передан некорретный Id пользователя !' });
       } else {
-        res.status(errCodes.internalServerError).send({ message: err.message });
+        res.status(responseСodes.internalServerError).send({ message: err.message });
       }
     });
 };
@@ -28,12 +28,12 @@ const getUser = (req, res) => {
 const createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .then((user) => res.send(user))
+    .then((user) => res.status(responseСodes.created).send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(errCodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
       } else {
-        res.status(errCodes.internalServerError).send({ message: err.message });
+        res.status(responseСodes.internalServerError).send({ message: err.message });
       }
     });
 };
@@ -44,14 +44,18 @@ const updateUserInfo = (req, res) => {
     new: true,
     runValidators: true,
   })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(errCodes.notFound).send({ message: 'Пользователь не найден !' });
-      } else if (err.name === 'ValidationError') {
-        res.status(errCodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+    .then((user) => {
+      if (user === null) {
+        res.status(responseСodes.notFound).send({ message: 'Пользователь не найден !' });
       } else {
-        res.status(errCodes.internalServerError).send({ message: err.message });
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+      } else {
+        res.status(responseСodes.internalServerError).send({ message: err.message });
       }
     });
 };
@@ -62,14 +66,18 @@ const updateUserAvatar = (req, res) => {
     new: true,
     runValidators: true,
   })
-    .then((user) => res.send(user))
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(errCodes.notFound).send({ message: 'Пользователь не найден !' });
-      } else if (err.name === 'ValidationError') {
-        res.status(errCodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+    .then((user) => {
+      if (user === null) {
+        res.status(responseСodes.notFound).send({ message: 'Пользователь не найден !' });
       } else {
-        res.status(errCodes.internalServerError).send({ message: err.message });
+        res.send(user);
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+      } else {
+        res.status(responseСodes.internalServerError).send({ message: err.message });
       }
     });
 };
