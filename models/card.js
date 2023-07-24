@@ -1,6 +1,7 @@
 // models/card.js
-
 const mongoose = require('mongoose');
+const regex = require('../utils/constants');
+
 // Опишем схему:
 const cardSchema = new mongoose.Schema({
   name: {
@@ -12,6 +13,10 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: (url) => regex.test(url),
+      message: 'Неверный формат ссылки',
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

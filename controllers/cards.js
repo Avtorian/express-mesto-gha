@@ -1,44 +1,54 @@
 const Card = require('../models/card');
 const { responseСodes } = require('../utils/responseСodes');
+const BadRequestErr = require('../errors/BadRequestErr');
+const ForbiddenErr = require('../errors/ForbiddenErr');
+const NotFoundErr = require('../errors/NotFoundErr');
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find()
     .then((cards) => res.send(cards))
-    .catch((err) => res.status(responseСodes.internalServerError).send({ message: err.message }));
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.status(responseСodes.created).send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+        next(new BadRequestErr('Переданы некорректные данные !'));
       } else {
-        res.status(responseСodes.internalServerError).send({ message: err.name });
+        next(err);
       }
     });
 };
-const deleteCard = (req, res) => {
-  Card.findByIdAndRemove(req.params.cardId)
+const deleteCard = (req, res, next) => {
+  const removeCard = () => {
+    Card.findByIdAndRemove(req.params.cardId)
+      .then((card) => res.send(card))
+      .catch(next);
+  };
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (card === null) {
-        res.status(responseСodes.notFound).send({ message: 'Карточка не найдена !' });
+        throw new NotFoundErr('Карточка не найдена !');
+      } else if (card.owner.toString() !== req.user._id) {
+        throw new ForbiddenErr('Только владелец карточки может её удалить !');
       } else {
-        res.send(card);
+        removeCard();
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(responseСodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
+        next(new BadRequestErr('Передан некорретный Id карточки !'));
       } else {
-        res.status(responseСodes.internalServerError).send({ message: err.message });
+        next(err);
       }
     });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -46,23 +56,23 @@ const likeCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(responseСodes.notFound).send({ message: 'Карточка не найдена !' });
+        throw new NotFoundErr('Карточка не найдена !');
       } else {
         res.send(card);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(responseСodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
+        next(new BadRequestErr('Передан некорретный Id карточки !'));
       } else if (err.name === 'ValidationError') {
-        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+        next(new BadRequestErr('Переданы некорректные данные !'));
       } else {
-        res.status(responseСodes.internalServerError).send({ message: err.message });
+        next(err);
       }
     });
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -70,18 +80,18 @@ const dislikeCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(responseСodes.notFound).send({ message: 'Карточка не найдена !' });
+        throw new NotFoundErr('Карточка не найдена !');
       } else {
         res.send(card);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(responseСodes.badRequest).send({ message: 'Передан некорретный Id карточки !' });
+        next(new BadRequestErr('Передан некорретный Id карточки !'));
       } else if (err.name === 'ValidationError') {
-        res.status(responseСodes.badRequest).send({ message: 'Переданы некорректные данные !' });
+        next(new BadRequestErr('Переданы некорректные данные !'));
       } else {
-        res.status(responseСodes.internalServerError).send({ message: err.message });
+        next(err);
       }
     });
 };
