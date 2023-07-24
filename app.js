@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const { errors, celebrate, Joi } = require('celebrate');
 const usersRouter = require('./routes/users');
 const cardsRouter = require('./routes/cards');
-const { responseСodes } = require('./utils/responseСodes');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const regex = require('./utils/constants');
