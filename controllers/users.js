@@ -5,7 +5,6 @@ const { responseСodes } = require('../utils/responseСodes');
 const BadRequestErr = require('../errors/BadRequestErr');
 const ConflictErr = require('../errors/ConflictErr');
 const NotFoundErr = require('../errors/NotFoundErr');
-const UnauthorizedErr = require('../errors/UnauthorizedErr');
 
 const getUsers = (req, res, next) => {
   User.find()
@@ -136,9 +135,7 @@ const login = (req, res, next) => {
 
       res.send({ token });
     })
-    .catch((err) => {
-      next(new UnauthorizedErr(err.message));
-    });
+    .catch(next);
 };
 
 module.exports = {
