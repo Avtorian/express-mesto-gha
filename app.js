@@ -8,6 +8,7 @@ const { responseСodes } = require('./utils/responseСodes');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
 const regex = require('./utils/constants');
+const NotFoundErr = require('./errors/NotFoundErr');
 // Слушаем 3000 порт
 const { PORT = 3000 } = process.env;
 
@@ -33,14 +34,17 @@ app.post('/signup', celebrate({
     password: Joi.string().required().min(8),
   }),
 }), createUser);
+
 app.use(auth);
 app.use('/cards', cardsRouter);
 app.use('/users', usersRouter);
 
-app.use('*', (req, res) => {
-  res.status(responseСodes.notFound).send({ message: 'Данная страница не найдена !' });
+app.use('*', (req, res, next) => {
+  next(new NotFoundErr('Данная страница не найдена !'));
 });
+
 app.use(errors());
+
 app.use((err, req, res, next) => {
   // если у ошибки нет статуса, выставляем 500
   const { statusCode = 500, message } = err;
